@@ -59,12 +59,12 @@ theme_set(theme_light()) # consistent visualization theme across plots
 ## ============================================================
 
 # set working directory
-setwd("../R/") # adjust as needed for your environment
+#setwd("../R/") # adjust as needed for your environment
 # check working directory
 getwd() # verify working directory
 
 # Load dataset
-dfastropec <- read_tsv("../data/Astropectinidae_result.tsv")
+dfastropec <- read_tsv("Astropectinidae_result.tsv")
 
 # Quick exploration
 class(dfastropec)
@@ -461,3 +461,4 @@ ggplot() +
 
 # ==> Points represent mean species centroids colored by cryptic status
 # (*_*) Figure 3 – spatial pattern of cryptic diversity
+
