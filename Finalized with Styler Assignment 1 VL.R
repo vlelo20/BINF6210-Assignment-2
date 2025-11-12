@@ -8,7 +8,7 @@
 ## ============================================================
 ## 0. Install Unique PACKAGES -----
 ## ============================================================
-
+#this is a test change
 # install packages:
 install.packages("sf") # Simple Features for spatial data
 install.packages("rnaturalearth") # World map polygons (Natural Earth)
@@ -59,12 +59,12 @@ theme_set(theme_light()) # consistent visualization theme across plots
 ## ============================================================
 
 # set working directory
-setwd("../R/") # adjust as needed for your environment
+#setwd("../R/") # adjust as needed for your environment
 # check working directory
 getwd() # verify working directory
 
 # Load dataset
-dfastropec <- read_tsv("../data/Astropectinidae_result.tsv")
+dfastropec <- read_tsv("Astropectinidae_result.tsv")
 
 # Quick exploration
 class(dfastropec)
@@ -86,13 +86,21 @@ dfastropec %>%
 
 sum(!is.na(dfastropec$country_ocean)) # ==> Total records with country data
 
+## ---- Extract latitude and longitude with less lines of code ----
+dfastropec <- dfastropec %>% 
+  mutate(coord_clean = str_remove_all(coord_clean, "\\[|\\]")) %>% 
+  separate(coord_clean, into = c("longitude", "latitude"), sep = ",", convert = T)
+
+# Confirm numeric conversion
+summary(select(dfastropec, latitude, longitude))
+
 ## ---- Extract latitude and longitude from 'coord' column ----
-dfastropec <- dfastropec %>%
-  mutate(
-    coord_clean = str_remove_all(coord, "\\[|\\]"), # clean brackets
-    longitude = as.numeric(str_split_fixed(coord_clean, ",", 2)[, 1]),
-    latitude = as.numeric(str_split_fixed(coord_clean, ",", 2)[, 2])
-  )
+#dfastropec <- dfastropec %>%
+#  mutate(
+#    coord_clean = str_remove_all(coord, "\\[|\\]"), # clean brackets
+#    longitude = as.numeric(str_split_fixed(coord_clean, ",", 2)[, 1]),
+#    latitude = as.numeric(str_split_fixed(coord_clean, ",", 2)[, 2])
+#  )
 
 # (>_<) In some BOLD exports, latitude/longitude can be flipped. Will verify later.
 
@@ -399,6 +407,29 @@ p_region_species
 # ==> Each bar now represents the number of distinct species, not records
 # (*_*) Figure 2B (revised): unbiased regional comparison of cryptic diversity
 
+## ---- Statistical Test: Are cryptic proportions different by region? ----
+region_table <- table(species_region_summary$region, species_region_summary$cryptic_status)
+chisq_test <- chisq.test(region_table)
+chisq_test
+
+#Output readable summary
+cat("Chi-squared test for independence between region and cryptic status: \n")
+cat("Chi-squared = ", round(chisq_test$statistic, 3), "  df = ", chisq_test$parameter, "  p-value = ", signif(chisq_test$p.value, 3), "\n")
+
+## ---- Add chi-squares test result as a caption ----
+region_table <- table(species_region_summary$region, 
+  species_region_summary$cryptic_status)
+chisq_test <- chisq.test(region_table)
+
+#Rebuild the plot with the caption
+p_region_species <- p_region_species + labs(caption = paste0(
+  "Chi-squared = ", round(chisq_test$statistic, 2),
+  ", df = ", chisq_test$parameter,
+  ", p = ", signif(chisq_test$p.value, 3)
+)) + theme(plot.caption = element_text(hjust = 1, size = 12, face = 'italic'))
+
+p_region_species
+
 ## ============================================================
 ## 9. FIX LATITUDE/LONGITUDE SWAP (IDENTIFIED ERROR) -----
 ## ============================================================
@@ -443,21 +474,44 @@ species_summary <- dfastrostar %>%
 
 world <- ne_countries(scale = "medium", returnclass = "sf")
 
-ggplot() +
-  geom_sf(data = world, fill = "gray95", color = "gray70", linewidth = 0.2) +
+#ggplot() +
+#  geom_sf(data = world, fill = "gray95", color = "gray70", linewidth = 0.2) +
+#  geom_point(
+#    data = species_summary,
+#    aes(x = mean_longitude, y = mean_latitude, color = cryptic_status),
+#    size = 3.2, alpha = 0.9
+#  ) +
+#  scale_color_viridis_d(option = "C", direction = -1, name = "Status") +
+#  coord_sf(xlim = c(-180, 180), ylim = c(-90, 90), expand = FALSE) +
+#  theme_minimal(base_size = 14) +
+#  labs(
+#    title = "Geographic Distribution of Cryptic versus Non-Cryptic Species",
+#    x = "Longitude", y = "Latitude"
+#  ) +
+#  theme(plot.title = element_text(hjust = 0.5))
+
+# ==> Points represent mean species centroids colored by cryptic status
+# (*_*) Figure 3 – spatial pattern of cryptic diversity
+
+ggplot() + 
+  geom_sf(data = world, fill = "gray95", color = "gray70", linewidth = 2.0) + 
+  #Density contours for cryptic species
+  geom_density_2d_filled(
+    data = species_summary %>% 
+      filter(cryptic_status == "cryptic"),
+      aes(x = mean_longitude, y = mean_latitude),
+      alpha = 0.5, contour_var = "ndensity"
+  ) + 
   geom_point(
     data = species_summary,
     aes(x = mean_longitude, y = mean_latitude, color = cryptic_status),
     size = 3.2, alpha = 0.9
-  ) +
-  scale_color_viridis_d(option = "C", direction = -1, name = "Status") +
-  coord_sf(xlim = c(-180, 180), ylim = c(-90, 90), expand = FALSE) +
-  theme_minimal(base_size = 14) +
+  ) + 
+  scale_color_viridis_d(option = "C", direction = -1, name = "Status") + 
+  coord_sf(xlim = c(-180, 180), ylim = c(-90, 90), expand = F) +
+  theme_minimal(base_size = 14) + 
   labs(
-    title = "Geographic Distribution of Cryptic versus Non-Cryptic Species",
+    title = "Global Distribution and Density of Cryptic vs Non-Cryptic Species",
     x = "Longitude", y = "Latitude"
-  ) +
+  ) + 
   theme(plot.title = element_text(hjust = 0.5))
-
-# ==> Points represent mean species centroids colored by cryptic status
-# (*_*) Figure 3 – spatial pattern of cryptic diversity
