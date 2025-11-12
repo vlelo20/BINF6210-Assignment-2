@@ -407,6 +407,29 @@ p_region_species
 # ==> Each bar now represents the number of distinct species, not records
 # (*_*) Figure 2B (revised): unbiased regional comparison of cryptic diversity
 
+## ---- Statistical Test: Are cryptic proportions different by region? ----
+region_table <- table(species_region_summary$region, species_region_summary$cryptic_status)
+chisq_test <- chisq.test(region_table)
+chisq_test
+
+#Output readable summary
+cat("Chi-squared test for independence between region and cryptic status: \n")
+cat("Chi-squared = ", round(chisq_test$statistic, 3), "  df = ", chisq_test$parameter, "  p-value = ", signif(chisq_test$p.value, 3), "\n")
+
+## ---- Add chi-squares test result as a caption ----
+region_table <- table(species_region_summary$region, 
+  species_region_summary$cryptic_status)
+chisq_test <- chisq.test(region_table)
+
+#Rebuild the plot with the caption
+p_region_species <- p_region_species + labs(caption = paste0(
+  "Chi-squared = ", round(chisq_test$statistic, 2),
+  ", df = ", chisq_test$parameter,
+  ", p = ", signif(chisq_test$p.value, 3)
+)) + theme(plot.caption = element_text(hjust = 1, size = 12, face = 'italic'))
+
+p_region_species
+
 ## ============================================================
 ## 9. FIX LATITUDE/LONGITUDE SWAP (IDENTIFIED ERROR) -----
 ## ============================================================
