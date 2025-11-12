@@ -474,22 +474,44 @@ species_summary <- dfastrostar %>%
 
 world <- ne_countries(scale = "medium", returnclass = "sf")
 
-ggplot() +
-  geom_sf(data = world, fill = "gray95", color = "gray70", linewidth = 0.2) +
-  geom_point(
-    data = species_summary,
-    aes(x = mean_longitude, y = mean_latitude, color = cryptic_status),
-    size = 3.2, alpha = 0.9
-  ) +
-  scale_color_viridis_d(option = "C", direction = -1, name = "Status") +
-  coord_sf(xlim = c(-180, 180), ylim = c(-90, 90), expand = FALSE) +
-  theme_minimal(base_size = 14) +
-  labs(
-    title = "Geographic Distribution of Cryptic versus Non-Cryptic Species",
-    x = "Longitude", y = "Latitude"
-  ) +
-  theme(plot.title = element_text(hjust = 0.5))
+#ggplot() +
+#  geom_sf(data = world, fill = "gray95", color = "gray70", linewidth = 0.2) +
+#  geom_point(
+#    data = species_summary,
+#    aes(x = mean_longitude, y = mean_latitude, color = cryptic_status),
+#    size = 3.2, alpha = 0.9
+#  ) +
+#  scale_color_viridis_d(option = "C", direction = -1, name = "Status") +
+#  coord_sf(xlim = c(-180, 180), ylim = c(-90, 90), expand = FALSE) +
+#  theme_minimal(base_size = 14) +
+#  labs(
+#    title = "Geographic Distribution of Cryptic versus Non-Cryptic Species",
+#    x = "Longitude", y = "Latitude"
+#  ) +
+#  theme(plot.title = element_text(hjust = 0.5))
 
 # ==> Points represent mean species centroids colored by cryptic status
 # (*_*) Figure 3 – spatial pattern of cryptic diversity
 
+ggplot() + 
+  geom_sf(data = world, fill = "gray95", color = "gray70", linewidth = 2.0) + 
+  #Density contours for cryptic species
+  geom_density_2d_filled(
+    data = species_summary %>% 
+      filter(cryptic_status == "cryptic"),
+      aes(x = mean_longitude, y = mean_latitude),
+      alpha = 0.5, contour_var = "ndensity"
+  ) + 
+  geom_point(
+    data = species_summary,
+    aes(x = mean_longitude, y = mean_latitude, color = cryptic_status),
+    size = 3.2, alpha = 0.9
+  ) + 
+  scale_color_viridis_d(option = "C", direction = -1, name = "Status") + 
+  coord_sf(xlim = c(-180, 180), ylim = c(-90, 90), expand = F) +
+  theme_minimal(base_size = 14) + 
+  labs(
+    title = "Global Distribution and Density of Cryptic vs Non-Cryptic Species",
+    x = "Longitude", y = "Latitude"
+  ) + 
+  theme(plot.title = element_text(hjust = 0.5))
