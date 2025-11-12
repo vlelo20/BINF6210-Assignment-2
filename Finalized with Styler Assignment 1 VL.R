@@ -8,7 +8,7 @@
 ## ============================================================
 ## 0. Install Unique PACKAGES -----
 ## ============================================================
-
+#this is a test change
 # install packages:
 install.packages("sf") # Simple Features for spatial data
 install.packages("rnaturalearth") # World map polygons (Natural Earth)
@@ -86,13 +86,21 @@ dfastropec %>%
 
 sum(!is.na(dfastropec$country_ocean)) # ==> Total records with country data
 
+## ---- Extract latitude and longitude with less lines of code ----
+dfastropec <- dfastropec %>% 
+  mutate(coord_clean = str_remove_all(coord_clean, "\\[|\\]")) %>% 
+  separate(coord_clean, into = c("longitude", "latitude"), sep = ",", convert = T)
+
+# Confirm numeric conversion
+summary(select(dfastropec, latitude, longitude))
+
 ## ---- Extract latitude and longitude from 'coord' column ----
-dfastropec <- dfastropec %>%
-  mutate(
-    coord_clean = str_remove_all(coord, "\\[|\\]"), # clean brackets
-    longitude = as.numeric(str_split_fixed(coord_clean, ",", 2)[, 1]),
-    latitude = as.numeric(str_split_fixed(coord_clean, ",", 2)[, 2])
-  )
+#dfastropec <- dfastropec %>%
+#  mutate(
+#    coord_clean = str_remove_all(coord, "\\[|\\]"), # clean brackets
+#    longitude = as.numeric(str_split_fixed(coord_clean, ",", 2)[, 1]),
+#    latitude = as.numeric(str_split_fixed(coord_clean, ",", 2)[, 2])
+#  )
 
 # (>_<) In some BOLD exports, latitude/longitude can be flipped. Will verify later.
 
